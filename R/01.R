@@ -1,70 +1,80 @@
 # install.packages("yarrr")
-# library("yarrr")
+library("yarrr")
 # getwd()
 # ls()
-
-#rm(data_1)
-
 # read csv
-data_01 <- read.table("data/p_01.csv", header = TRUE, sep = ",")
 
-# add correct_key column
+rm(list=ls())
+data_01 <- read.table("data/6_bd-ai.csv", header = TRUE, sep = ",")
 
-data_01_less$correct_key <- "up"
-data_01_less$correct_key[data_01_less$target_x == 0.5 & 
-               data_01_less$target_y == -0.25] <- "down"
-data_01_less$correct_key[data_01_less$target_x == -0.5 & 
-                           data_01_less$target_y == 0.25] <- "left"
-data_01_less$correct_key[data_01_less$target_x == -0.5 & 
-                           data_01_less$target_y == -0.25] <- "right"
+
+# List all files ending with csv in directory
+csv_files = list.files(path = 'data', pattern = "csv$", full.names = TRUE)
+# Read each csv file into a list
+data_01 <- map_dfr(csv_files, read_csv)
 
 # add roka column
-data_01_less$roka <- "nepareizs"
-data_01_less$roka[data_01_less$target_x == data_01_less$hand_x] <- "pareizs"
+data_01$roka <- "nepareizs"
+data_01$roka[data_01$target_x == data_01$hand_x] <- "pareizs"
 
-# add kustība column
-data_01_less$kustība <- "nepareizs"
-data_01_less$kustība[data_01_less$target_y == data_01_less$movement_y] <- "pareizs"
+# add kustiba column
+data_01$kustiba <- "nepareizs"
+data_01$kustiba[data_01$target_y == data_01$movement_y] <- "pareizs"
 
 # drop incorrect responses
-rm(data_1_filtered)
-data_1_filtered <- data_01_less[data_01_less$response.keys == data_01_less$correct_key, ]
+# rm(data_1_filtered)
+data_1_filtered_correct <- data_01[data_01$key_resp.corr == 1, ]
 
 # percent of incorrect responses
-correct_key_responses <- nrow(data_1_filtered) / nrow(data_01_less) * 100
+correct_key_responses <- nrow(data_1_filtered_correct) / nrow(data_01) * 100
+
+# drop responses > 1 sec
+data_1_filtered <- data_1_filtered_correct[data_1_filtered_correct$key_resp.rt <= 1, ]
+
+# mean
+mean(data_1_filtered$key_resp.rt)
 
 # means of response times vs cue correctness
-aggregate(formula = response.rt ~ roka * kustība,
+aggregate(formula = key_resp.rt ~ roka * kustiba,
           data = data_1_filtered,
-          FUN = mean)
+          FUN = mean,
+          na.rm = TRUE,
+          na.action=NULL)
 
 
 # create linear regression model
-response.rt.lm <- lm (formula = response.rt ~ roka * kustība,
+response.rt.lm <- lm (formula = key_resp.rt ~ roka * kustiba,
                         data = data_1_filtered)
-anova(response.rt.lm)
+ano <- anova(response.rt.lm)
 
-# anova
-  # response.rt.aov <- aov(formula = response.rt ~ roka * kustība,
-  #     data = data_1_filtered)
-  # summary(response.rt.aov)
+xtable(ano)
+
 
 # regression coefficients
 summary(response.rt.lm)
 
 # raw data, means, density and 95% CI plot
-yarrr::pirateplot(formula = response.rt ~ roka * kustība, # dv is weight, iv is Diet
+yarrr::pirateplot(formula = key_resp.rt ~ roka * kustiba, # dv is weight, iv is Diet
                   data = data_1_filtered,
                   theme = 3,
                   main = "Reakcijas laika vidējās vērtības, sadalījums un 95% ticamības intervāls atkarībā no signālu pareizības",
                   xlab = "Reakcijas laiks",
-                  ylab = "rokas un kustības signāls (pareizs/nepareizs)")
+                  ylab = "rokas un kustibas signāls (pareizs/nepareizs)")
 
+# install.packages("gtsummary")
+library(gtsummary)
 
+resu <- data_1_filtered %>% select(participant, key_resp.rt)
 
-
-
-
+table1 <- 
+  tbl_summary(
+    resu,
+    by = participant, # split table by group
+    missing = "no" # don't list missing data separately
+  ) %>%
+  modify_header(label = "**Dalībnieks**") %>% # update the column header
+  bold_labels() 
+table1
 
 
 
