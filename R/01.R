@@ -1,17 +1,22 @@
 # install.packages("yarrr")
 library("yarrr")
+# install.packages('tidyverse')
+library(tidyverse)
 # getwd()
 # ls()
 # read csv
 
 rm(list=ls())
-data_01 <- read.table("data/6_bd-ai.csv", header = TRUE, sep = ",")
+# data_01 <- read.table("data/6_bd-ai.csv", header = TRUE, sep = ",")
 
 
 # List all files ending with csv in directory
 csv_files = list.files(path = 'data', pattern = "csv$", full.names = TRUE)
 # Read each csv file into a list
 data_01 <- map_dfr(csv_files, read_csv)
+
+
+#rename columns
 
 # add roka column
 data_01$roka <- "nepareizs"
