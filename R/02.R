@@ -38,8 +38,27 @@ apa.2way.table(iv1=roka,iv2=kustiba,dv=key_resp.rt,data=data_1_filtered,landscap
 response.rt.lm <- lm (formula = key_resp.rt ~ roka * kustiba,
                       data = data_1_filtered)
 
-apa.reg.table(response.rt.lm, filename="2.doc")
+apa.reg.table(response.rt.lm, filename="3.doc")
 
 
 # mean
 mean(data_1_filtered$age)
+
+
+install.packages('rstatix')
+library(rstatix)
+identify_outliers(data_1_filtered_correct, key_resp.rt)
+install.packages('ggpubr')
+library(ggplot2)
+library(ggpubr)
+
+install.packages('WRS2')
+library(WRS2)
+
+
+
+ggqqplot(data=data_1_filtered_correct, 'key_resp.rt')
+shapiro_test()
+
+par(mfrow=c(1,1))
+plot(response.rt.lm)
